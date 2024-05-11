@@ -7,7 +7,7 @@ import {
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -398,6 +398,25 @@ const dashboardData = asyncHandler(async (req, res) => {
     );
 });
 
+const userProfile = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  if (!isValidObjectId(userId)) {
+    throw new ApiError(400, "Invalid userId");
+  }
+
+  const profile = await User.findById(userId).select(
+    "-password -createdAt -updatedAt -refreshToken  -__v -userType"
+  );
+
+  if (!profile) {
+    throw new ApiError(400, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, profile, "User profile fetched successfully"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -408,4 +427,5 @@ export {
   getCurrentUser,
   changeCurrentPassword,
   dashboardData,
+  userProfile,
 };
